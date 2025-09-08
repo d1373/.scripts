@@ -1,0 +1,45 @@
+#!/bin/bash
+
+project_name=$1
+
+# Function to check and create directory
+create_project() {
+    local name=$1
+    target_directory="$HOME/Developer/$name"
+    
+    # Check if the directory exists
+    if [ -d "$target_directory" ]; then
+        echo "Can't use this name as it already exists. Please type a new name:"
+        read -r new_name
+        create_project "$new_name"
+    else
+        echo "Directory '$target_directory' not found. Creating and moving to it."
+        mkdir -p "$target_directory"
+        cd "$target_directory"
+        git init
+        touch .gitignore
+        echo $name >> README.md
+        git add .
+        git commit -m "Initial commit"
+        git branch -M main
+        gh repo create $name --private --source=. 
+        git push -u origin main
+        
+        # Create and attach tmux session with directory name
+        echo "Creating tmux session '$name'"
+        tmux new-session -s "$name" -d
+        
+        # Check if we're already in a tmux session
+        if [ -n "$TMUX" ]; then
+            # If inside tmux, switch to the new session
+            tmux switch-client -t "$name"
+        else
+            # If not in tmux, attach normally
+            tmux attach-session -t "$name"
+        fi
+    fi
+}
+
+# Start the process
+create_project "$project_name"
+
