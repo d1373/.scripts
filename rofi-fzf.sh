@@ -1,23 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TAIL=3  # how many trailing path components to show (x/y/file = 3)
+# Build file list once, then show only short labels in rofi.
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
 
 fd . "$HOME/dev" "$HOME/Documents" "$HOME/Pictures" "$HOME/Downloads" "$HOME/Notes" "$HOME/Videos" \
   --type f --hidden --follow --exclude .git --exclude node_modules 2>/dev/null \
-| awk -v n="$TAIL" -F/ '
-  {
-    full=$0
-    if (NF <= n) {
-      disp=full
-    } else {
-      disp=$(NF-n+1)
-      for (i=NF-n+2; i<=NF; i++) disp=disp "/" $i
-      disp="…/" disp
-    }
-    # output: display<TAB>fullpath
-    print disp "\t" full
-  }' \
-| rofi -dmenu -i -matching fuzzy -p "Open" \
-| cut -f2- \
-| xargs -r xdg-open >/dev/null 2>&1 &
+| sort \
+| tee "$tmp" \
+| awk -F/ 'NF>=2 { print $(NF-1) "/" $NF; next } { print $0 }' \
+| rofi -dmenu -i -sorting-method fzf -p "Open" \
+    -format i \
+    -theme-str '* { text-wrap: false; } #window { width: 900px; } listview { lines: 12; }' \
+| {
+    read -r idx || exit 0
+    [ -z "${idx:-}" ] && exit 0
+    full="$(sed -n "$((idx+1))p" "$tmp")"
+    [ -n "$full" ] && xdg-open "$full" >/dev/null 2>&1 &
+  }
