@@ -17,7 +17,7 @@ if [[ ! -f "$img" ]]; then
 fi
 
 # Set desktop wallpaper (X11)
-feh --no-fehbg --bg-fill "$img"
+feh --bg-fill "$img"
 
 # Update betterlockscreen cache
 betterlockscreen -u "$img"

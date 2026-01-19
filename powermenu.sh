@@ -10,9 +10,10 @@ shutdown="  Shutdown"
 reboot="󰜉  Reboot"
 logout="󰍃  Logout (Awesome)"
 awesome_restart="󰑓  Restart (Awesome)"
+lock="󰍣  Lock"
 
 chosen=$(printf "%s\n%s\n%s\n%s\n" \
-  "$shutdown" "$reboot" "$logout" "$awesome_restart" | eval "$ROFI")
+  "$shutdown" "$reboot" "$logout" "$awesome_restart" "$lock" | eval "$ROFI")
 
 case "$chosen" in
   "$shutdown")
@@ -23,6 +24,9 @@ case "$chosen" in
     ;;
   "$logout")
     awesome-client "awesome.quit()"
+    ;;
+  "$lock")
+    betterlockscreen -l
     ;;
   "$awesome_restart")
     awesome-client "awesome.restart()"
